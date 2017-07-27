@@ -1,0 +1,30 @@
+{
+  "name": "vidyanusa-layer-1-2",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www",
+    "devstart": "nodemon ./bin/www"
+  },
+  "dependencies": {
+    "async": "^2.4.1",
+    "body-parser": "~1.17.1",
+    "co": "^4.6.0",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.3",
+    "express": "~4.15.2",
+    "express-group-routes": "^1.1.0",
+    "express-validator": "^3.2.0",
+    "md5": "^2.2.1",
+    "moment": "^2.18.1",
+    "mongodb": "^2.2.26",
+    "mongoose": "^4.9.6",
+    "morgan": "~1.8.1",
+    "node-rest-client": "^3.1.0",
+    "pug": "latest",
+    "serve-favicon": "~2.4.2"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
+  }
+}
