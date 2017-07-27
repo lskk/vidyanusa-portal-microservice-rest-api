@@ -17,6 +17,8 @@ router.group("/absensi", (router) => {
 router.group("/kegiatan", (router) => {
     router.post("/", kegiatanController.tambah_kegiatan);
     router.post("/kategori", kegiatanController.daftar_kategori_kegiatan);
+    router.post("/daftar_semua", kegiatanController.daftar_semua);
+    router.post("/daftar_per_pengguna", kegiatanController.daftar_per_pengguna);
 });
 
 module.exports = router;

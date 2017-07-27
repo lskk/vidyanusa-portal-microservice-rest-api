@@ -122,3 +122,89 @@ exports.daftar_kategori_kegiatan = function(req,res) {
   }
 
 }
+
+exports.daftar_semua = function(req,res) {
+  //Inisial validasi
+  req.checkBody('access_token', 'Akses token tidak boleh kosong').notEmpty();
+
+  req.sanitize('access_token').escape();
+  req.sanitize('access_token').trim();
+
+  //Menjalankan validasi
+  var errors = req.validationErrors();
+
+  if(errors){//Terjadinya kesalahan
+
+    return res.json({success: false, data: {message: errors }})
+
+  }else{
+
+    //Cek akses token terlebih dahulu
+    args = {
+          	data: {
+              access_token: req.body.access_token
+            },
+          	headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+           };
+
+    rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
+
+      if(data.success == true){//session berlaku
+        Kegiatan.find({})
+         .exec(function (err, results) {
+           return res.json({success: true, data: results})
+         })
+      }else{
+         return res.json({success: false, data: {message:data.data.message}})
+      }
+
+    })
+
+  }
+
+}
+
+exports.daftar_per_pengguna = function(req,res) {
+  //Inisial validasi
+  req.checkBody('access_token', 'Akses token tidak boleh kosong').notEmpty();
+  req.checkBody('pengguna', 'Id pengguna tidak boleh kosong').notEmpty();
+
+  req.sanitize('access_token').escape();
+  req.sanitize('access_token').trim();
+  req.sanitize('pengguna').escape();
+  req.sanitize('pengguna').trim();
+
+  //Menjalankan validasi
+  var errors = req.validationErrors();
+
+  if(errors){//Terjadinya kesalahan
+
+    return res.json({success: false, data: {message: errors }})
+
+  }else{
+
+    //Cek akses token terlebih dahulu
+    args = {
+          	data: {
+              access_token: req.body.access_token,
+              pengguna: req.body.pengguna
+            },
+          	headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+           };
+
+    rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
+
+      if(data.success == true){//session berlaku
+        Kegiatan.find({pengguna:req.body.pengguna})
+         .exec(function (err, results) {
+           return res.json({success: true, data: results})
+         })
+      }else{
+         return res.json({success: false, data: {message:data.data.message}})
+      }
+
+    })
+
+  }
+
+}
