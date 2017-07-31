@@ -15,7 +15,6 @@ exports.tambah = function(req,res) {
   req.checkBody('pengguna', 'Id Pengguna diperlukan').notEmpty();
   req.checkBody('access_token', 'Akses token tidak boleh kosong').notEmpty();
   req.checkBody('kelas', 'Id kelas diperlukan').notEmpty();
-  req.checkBody('tanggal', 'Tanggal mengabsen diperlukan').notEmpty();
   req.checkBody('keterangan', 'Keteragan diperlukan').notEmpty();
   req.checkBody('latitude', 'Latitude diperlukan').notEmpty();
   req.checkBody('longitude', 'Longitude diperlukan').notEmpty();
@@ -26,9 +25,7 @@ exports.tambah = function(req,res) {
   req.sanitize('access_token').escape();
   req.sanitize('access_token').trim();
   req.sanitize('kelas').escape();
-  req.sanitize('kelas').trim();
-  req.sanitize('tanggal').escape();
-  req.sanitize('tanggal').trim();
+  req.sanitize('kelas').trim();  
   req.sanitize('keterangan').escape();
   req.sanitize('keterangan').trim();
   req.sanitize('latitude').escape();

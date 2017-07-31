@@ -9,4 +9,4 @@ var KategoriKegiatanSchema = Schema({
 },{collection: 'kategori_kegiatan'});
 
 //Export model
-module.exports = mongoose.model('kategori_kegiatan', KategoriKegiatanSchema);
+module.exports = mongoose.model('kategoriKegiatan', KategoriKegiatanSchema);

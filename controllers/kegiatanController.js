@@ -1,5 +1,6 @@
 //Import model
 var Kegiatan = require('../models/kegiatanModel');
+var Log = require('../models/logModel');
 var KategoriKegiatan = require('../models/kategoriKegiatanModel');
 
 //Import library
@@ -17,6 +18,7 @@ exports.tambah_kegiatan = function(req,res) {
   req.checkBody('judul', 'Mohon isi field Judul').notEmpty();
   req.checkBody('kategori', 'Mohon pilih Kategori').notEmpty();
   req.checkBody('pengguna', 'Mohon isi field Pengguna').notEmpty();
+  req.checkBody('username', 'Mohon isi field Username').notEmpty();
   req.checkBody('file_berkas', 'Mohon pilih berkas foto').notEmpty();
   req.checkBody('latitude', 'Mohon izinkan web browser untuk mengetahui lokasi anda sekarang.').notEmpty();
   req.checkBody('longitude', 'Mohon izinkan web browser untuk mengetahui lokasi anda sekarang.').notEmpty();
@@ -36,6 +38,8 @@ exports.tambah_kegiatan = function(req,res) {
   req.sanitize('latitude').trim();
   req.sanitize('longitude').escape();
   req.sanitize('longitude').trim();
+  req.sanitize('username').escape();
+  req.sanitize('username').trim();
 
   //Menjalankan validasi
   var errors = req.validationErrors();
@@ -56,23 +60,82 @@ exports.tambah_kegiatan = function(req,res) {
     rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
       if(data.success == true){//session berlaku
 
-        var inputan = new Kegiatan(
-          {
-            judul: req.body.judul,
-            pengguna: req.body.pengguna,
-            kategori: req.body.kategori,
-            file_berkas: req.body.file_berkas,
-            lokasi: {latitude: req.body.latitude, longitude:req.body.longitude}
-          }
-        );
+        //Mengatur proses
+        async.series({
+              one: function(callback) {
+                //Menambahkan ke collection kegiatan
+                var inputan = new Kegiatan(
+                  {
+                    judul: req.body.judul,
+                    pengguna: req.body.pengguna,
+                    username: req.body.username,
+                    kategori: req.body.kategori,
+                    file_berkas: req.body.file_berkas,
+                    lokasi: {latitude: req.body.latitude, longitude:req.body.longitude}
+                  }
+                );
 
-        inputan.save(function(err){
-          if (err) {
-            return res.json({success: false, data: err})
-          } else {
-            return res.json({success: true, data: {message:'Kegiatan anda berhasil di tambahkan.'}})
-          }
-        })
+                inputan.save(function(err){
+                  if (err) {
+                    console.log('Terjadi error di input kegiatan')
+                    //return res.json({success: false, data: err})
+                  } else {
+                    console.log('Input kegiatan berhasil')
+                    //return res.json({success: true, data: {message:'Kegiatan anda berhasil di tambahkan.'}})
+                  }
+                })
+
+                callback(null, 1);
+              },
+              two: function(callback){
+                //Menambahkan poin
+                args = {
+                      	data: {
+                          access_token: req.body.access_token,
+                          jumlah_poin: 1,
+                          keterangan: 'poin didapatkan dari menambahkan kegiatan',
+                          id_pengguna: req.body.pengguna
+                        },
+                      	headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                       };
+
+                rClient.post(base_api_general_url+'/poin/tambah', args, function (data, response) {
+                  if(data.success == true){//poin berhasil ditambahkan
+                    console.log('Poin berhasil ditambahkan')
+                  }else{
+                    console.log('Poin gagal ditambahkan')
+                  }
+                })
+
+                callback(null, 2);
+              },
+              three: function(callback){
+                //Menambahkan log
+                var inputanLog = new Log(
+                  {
+                    pengguna: req.body.pengguna,
+                    keterangan: 'Menambahkan kegiatan dengan judul '+req.body.judul
+                  }
+                );
+
+                inputanLog.save(function(err){
+                  if (err) {
+                    console.log('Terjadi error di input log')
+                    return res.json({success: false, data: err})
+                  } else {
+                    console.log('Input log berhasil')
+                    return res.json({success: true, data: {message:'Kegiatan anda berhasil di tambahkan.'}})
+                  }
+                })
+
+
+                callback(null, 3);
+              }
+          }, function(err, results) {
+              // results is now equal to: {one: 1, two: 2}
+          })
+
+
 
       }else{//sessio tidak berlaku
         return res.json({success: false, data: {message:data.data.message}})
@@ -150,10 +213,14 @@ exports.daftar_semua = function(req,res) {
     rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
 
       if(data.success == true){//session berlaku
+
         Kegiatan.find({})
+         .sort([['created_at', 'descending']])
+         .populate('kategori')
          .exec(function (err, results) {
            return res.json({success: true, data: results})
          })
+
       }else{
          return res.json({success: false, data: {message:data.data.message}})
       }
@@ -206,5 +273,22 @@ exports.daftar_per_pengguna = function(req,res) {
     })
 
   }
+
+}
+
+exports.log_kegiatan = function(req,res) {
+
+  if(req.body.id_pengguna == null || req.body.id_pengguna == ''){
+    return res.json({success: false, data: {message:'Param id pengguna tidak boleh kosong.'}})
+  }else{
+
+    Log.find({'pengguna':req.body.id_pengguna})
+     .sort([['created_at', 'descending']])
+     .exec(function (err, results) {
+       return res.json({success: true, data: results})
+     })
+
+  }
+
 
 }
