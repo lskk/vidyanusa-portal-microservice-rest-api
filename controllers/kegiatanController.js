@@ -99,11 +99,13 @@ exports.tambah_kegiatan = function(req,res) {
                       	headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
                        };
 
-                rClient.post(base_api_general_url+'/poin/tambah', args, function (data, response) {
+                rClient.post('http://localhost:3200/poin/tambah', args, function (data, response) {
                   if(data.success == true){//poin berhasil ditambahkan
                     console.log('Poin berhasil ditambahkan')
+                    return res.json({success: true, data: {message:'Kegiatan anda berhasil di tambahkan.'}})
                   }else{
                     console.log('Poin gagal ditambahkan')
+                    return res.json({success: false, data: {message:'Kegiatan anda gagal di tambahkan.'}})
                   }
                 })
 
