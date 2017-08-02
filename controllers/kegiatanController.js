@@ -108,28 +108,6 @@ exports.tambah_kegiatan = function(req,res) {
                 })
 
                 callback(null, 2);
-              },
-              three: function(callback){
-                //Menambahkan log
-                var inputanLog = new Log(
-                  {
-                    pengguna: req.body.pengguna,
-                    keterangan: 'Menambahkan kegiatan dengan judul '+req.body.judul
-                  }
-                );
-
-                inputanLog.save(function(err){
-                  if (err) {
-                    console.log('Terjadi error di input log')
-                    return res.json({success: false, data: err})
-                  } else {
-                    console.log('Input log berhasil')
-                    return res.json({success: true, data: {message:'Kegiatan anda berhasil di tambahkan.'}})
-                  }
-                })
-
-
-                callback(null, 3);
               }
           }, function(err, results) {
               // results is now equal to: {one: 1, two: 2}

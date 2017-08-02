@@ -1,11 +1,16 @@
 var mongoose = require('mongoose');
 var moment = require('moment')
+var async = require('async');
 
-//Koneksi ke general collection
+//Koneksi
 var koneksi_general_collections = mongoose.createConnection('mongodb://thesisvidyanusa:kjc5qvrh@167.205.7.230:27017/vidyanusa-general-collections');
-
+var koneksi_portal_collections = mongoose.createConnection('mongodb://thesisvidyanusa:kjc5qvrh@167.205.7.230:27017/vidyanusa');
 
 var Schema = mongoose.Schema;
+
+var KategoriKegiatanSchema = Schema({
+  nama_kategori: {type: String, min: 1, max: 100, required: true}
+},{collection: 'kategori_kegiatan'});
 
 var KegiatanSchema = Schema({
   judul: {type: String, min: 1, max: 100, required: true},
@@ -18,10 +23,11 @@ var KegiatanSchema = Schema({
   updated_at: { type: Date, default: Date.now}
 },{collection: 'kegiatan'});
 
-var KategoriKegiatanSchema = Schema({
-  nama_kategori: {type: String, min: 1, max: 100, required: true}
-},{collection: 'kategori_kegiatan'});
+var UserSchema = Schema({
+  email: {type: String, min: 1, max: 100, required: true}
+},{collection: 'pengguna'});
 
 //Export model
-module.exports = mongoose.model('kategori_kegiatan', KategoriKegiatanSchema);
-module.exports = mongoose.model('kegiatan', KegiatanSchema);
+module.exports = koneksi_general_collections.model('users', UserSchema)
+module.exports = koneksi_portal_collections.model('kategori_kegiatan', KategoriKegiatanSchema)
+module.exports = koneksi_portal_collections.model('kegiatan', KegiatanSchema)

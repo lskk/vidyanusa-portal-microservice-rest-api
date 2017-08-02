@@ -19,7 +19,7 @@ router.group("/kegiatan", (router) => {
     router.post("/kategori", kegiatanController.daftar_kategori_kegiatan);
     router.post("/daftar_semua", kegiatanController.daftar_semua);
     router.post("/daftar_per_pengguna", kegiatanController.daftar_per_pengguna);
-    router.post("/log", kegiatanController.log_kegiatan);
+    //router.post("/log", kegiatanController.log_kegiatan);
 });
 
 module.exports = router;

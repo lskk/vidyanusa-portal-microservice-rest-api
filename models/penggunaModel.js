@@ -1,18 +1,18 @@
 var mongoose = require('mongoose');
+var moment = require('moment')
 
-//Koneksi ke general collection
-//var koneksi_general_collections = mongoose.createConnection('mongodb://thesisvidyanusa:kjc5qvrh@167.205.7.230:27017/vidyanusa-general-collections');
+//Koneksi
+var koneksi_general_collections = mongoose.createConnection('mongodb://thesisvidyanusa:kjc5qvrh@167.205.7.230:27017/vidyanusa-general-collections');
 
 var Schema = mongoose.Schema;
 
-// var PenggunaSchema = koneksi_general_collections.model('pengguna', Schema({
-//   profil:{username: {type: String, min: 1, max: 100, required: true}}
-// },{collection: 'pengguna'})))
-
-var PenggunaSchema = Schema({
-  profil:{username: {type: String, min: 1, max: 100, required: true}}
-},{collection: 'pengguna'})
+var UserSchema = Schema({
+  profil:{
+    username: {type: String, min: 1, max: 100, required: true},
+    foto: {type: String, min: 1, max: 100, default: 'http://filehosting.pptik.id/TESISS2ITB/Vidyanusa/default-profile-picture.png'}
+  }
+},{collection: 'pengguna'});
 
 
 //Export model
-module.exports = PenggunaSchema;
+module.exports = koneksi_general_collections.model('pengguna', UserSchema)
