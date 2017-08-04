@@ -2,6 +2,7 @@
 var Kegiatan = require('../models/kegiatanModel');
 var Log = require('../models/logModel');
 var KategoriKegiatan = require('../models/kategoriKegiatanModel');
+var Pengguna = require('../models/penggunaModel');
 
 //Import library
 var async = require('async');
@@ -18,7 +19,6 @@ exports.tambah_kegiatan = function(req,res) {
   req.checkBody('judul', 'Mohon isi field Judul').notEmpty();
   req.checkBody('kategori', 'Mohon pilih Kategori').notEmpty();
   req.checkBody('pengguna', 'Mohon isi field Pengguna').notEmpty();
-  req.checkBody('username', 'Mohon isi field Username').notEmpty();
   req.checkBody('file_berkas', 'Mohon pilih berkas foto').notEmpty();
   req.checkBody('latitude', 'Mohon izinkan web browser untuk mengetahui lokasi anda sekarang.').notEmpty();
   req.checkBody('longitude', 'Mohon izinkan web browser untuk mengetahui lokasi anda sekarang.').notEmpty();
@@ -38,8 +38,6 @@ exports.tambah_kegiatan = function(req,res) {
   req.sanitize('latitude').trim();
   req.sanitize('longitude').escape();
   req.sanitize('longitude').trim();
-  req.sanitize('username').escape();
-  req.sanitize('username').trim();
 
   //Menjalankan validasi
   var errors = req.validationErrors();
@@ -67,8 +65,7 @@ exports.tambah_kegiatan = function(req,res) {
                 var inputan = new Kegiatan(
                   {
                     judul: req.body.judul,
-                    pengguna: req.body.pengguna,
-                    username: req.body.username,
+                    pengguna: req.body.pengguna,                    
                     kategori: req.body.kategori,
                     file_berkas: req.body.file_berkas,
                     lokasi: {latitude: req.body.latitude, longitude:req.body.longitude}
@@ -99,7 +96,7 @@ exports.tambah_kegiatan = function(req,res) {
                       	headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
                        };
 
-                rClient.post('http://localhost:3200/poin/tambah', args, function (data, response) {
+                rClient.post(base_api_general_url+'/poin/tambah', args, function (data, response) {
                   if(data.success == true){//poin berhasil ditambahkan
                     console.log('Poin berhasil ditambahkan')
                     return res.json({success: true, data: {message:'Kegiatan anda berhasil di tambahkan.'}})
@@ -196,7 +193,12 @@ exports.daftar_semua = function(req,res) {
 
         Kegiatan.find({})
          .sort([['created_at', 'descending']])
-         .populate('kategori')
+         .populate({
+           path: 'pengguna',model:Pengguna
+         })
+         .populate({
+           path: 'kategori',model:KategoriKegiatan
+         })
          .exec(function (err, results) {
            return res.json({success: true, data: results})
          })
