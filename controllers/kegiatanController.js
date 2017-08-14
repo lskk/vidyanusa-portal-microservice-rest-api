@@ -65,7 +65,7 @@ exports.tambah_kegiatan = function(req,res) {
                 var inputan = new Kegiatan(
                   {
                     judul: req.body.judul,
-                    pengguna: req.body.pengguna,                    
+                    pengguna: req.body.pengguna,
                     kategori: req.body.kategori,
                     file_berkas: req.body.file_berkas,
                     lokasi: {latitude: req.body.latitude, longitude:req.body.longitude}
@@ -99,14 +99,40 @@ exports.tambah_kegiatan = function(req,res) {
                 rClient.post(base_api_general_url+'/poin/tambah', args, function (data, response) {
                   if(data.success == true){//poin berhasil ditambahkan
                     console.log('Poin berhasil ditambahkan')
-                    return res.json({success: true, data: {message:'Kegiatan anda berhasil di tambahkan.'}})
+
                   }else{
                     console.log('Poin gagal ditambahkan')
-                    return res.json({success: false, data: {message:'Kegiatan anda gagal di tambahkan.'}})
+                    
                   }
                 })
 
                 callback(null, 2);
+              },
+              three: function(callback) {
+                //Menambahkan log
+                args = {
+                      	data: {
+                          access_token: req.body.access_token,
+                          id_pengguna: req.body.pengguna,
+                          tipe: 4,
+                          judul: 'Menambahkan kegiatan dengan judul:'+req.body.judul,
+                          link: null
+                        },
+                      	headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                       };
+
+                rClient.post(base_api_general_url+'/log/tambah', args, function (data, response) {
+                  if(data.success == true){//poin berhasil ditambahkan
+                    console.log('Log berhasil ditambahkan')
+                    return res.json({success: true, data: {message:'Kegiatan anda berhasil di tambahkan.'}})
+                  }else{
+                    console.log('Log gagal ditambahkan')
+                    return res.json({success: false, data: {message:'Kegiatan anda gagal di tambahkan.'}})
+                  }
+                })
+
+
+                callback(null,3)
               }
           }, function(err, results) {
               // results is now equal to: {one: 1, two: 2}
