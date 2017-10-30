@@ -4,6 +4,7 @@ var Log = require('../models/logModel');
 var KategoriKegiatan = require('../models/kategoriKegiatanModel');
 var Pengguna = require('../models/penggunaModel');
 
+
 //Import library
 var async = require('async');
 var moment = require('moment');
@@ -32,8 +33,6 @@ exports.tambah_kegiatan = function(req,res) {
   req.sanitize('pengguna').trim();
   req.sanitize('kategori').escape();
   req.sanitize('kategori').trim();
-  req.sanitize('file_berkas').escape();
-  req.sanitize('file_berkas').trim();
   req.sanitize('latitude').escape();
   req.sanitize('latitude').trim();
   req.sanitize('longitude').escape();
@@ -102,7 +101,7 @@ exports.tambah_kegiatan = function(req,res) {
 
                   }else{
                     console.log('Poin gagal ditambahkan')
-                    
+
                   }
                 })
 
@@ -115,8 +114,7 @@ exports.tambah_kegiatan = function(req,res) {
                           access_token: req.body.access_token,
                           id_pengguna: req.body.pengguna,
                           tipe: 4,
-                          judul: 'Menambahkan kegiatan dengan judul:'+req.body.judul,
-                          link: null
+                          judul: 'Menambahkan kegiatan dengan judul:'+req.body.judul
                         },
                       	headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
                        };
@@ -141,6 +139,101 @@ exports.tambah_kegiatan = function(req,res) {
 
 
       }else{//sessio tidak berlaku
+        return res.json({success: false, data: {message:data.data.message}})
+      }
+    });
+
+
+  }
+
+}
+
+exports.hapus_kegiatan = function(req,res) {
+
+  //Inisial validasi
+  req.checkBody('access_token', 'Akses token tidak boleh kosong').notEmpty();
+  req.checkBody('id', 'Mohon isi id kegiatan').notEmpty();
+  req.checkBody('pengguna', 'Mohon isi id pengguna').notEmpty();
+
+  //Dibersihkan dari Special Character
+  req.sanitize('access_token').escape();
+  req.sanitize('access_token').trim();
+
+  req.sanitize('id').escape();
+  req.sanitize('id').trim();
+
+  req.sanitize('pengguna').escape();
+  req.sanitize('pengguna').trim();
+
+
+
+  //Menjalankan validasi
+  var errors = req.validationErrors();
+
+  if(errors){//Terjadinya kesalahan
+
+      return res.json({success: false, data: errors})
+
+  }else{
+
+    //Cek akses token terlebih dahulu
+    args = {
+          	data: {
+              access_token: req.body.access_token},
+          	headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+           };
+
+    rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
+      if(data.success == true){//session berlaku
+
+        //Mengatur proses
+        async.series({
+              one: function(callback) {
+                //Menghapus  kegiatan di collection kegiatan
+                Kegiatan.remove({ _id: req.body.id }, function (err) {
+                    if (err) {
+                      console.log('Terjadi error menghapus kegiatan')
+                    }else{
+                      console.log('Berhasil menghapus kegiatan')
+                    }
+                    // removed!
+
+                  });
+
+                callback(null, 1);
+              },
+              two: function(callback){
+
+                //Menambahkan log
+                args = {
+                      	data: {
+                          access_token: req.body.access_token,
+                          id_pengguna: req.body.pengguna,
+                          tipe: 4,
+                          judul: 'Menghapus sebuah kegiatan'
+                        },
+                      	headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                       };
+
+                rClient.post(base_api_general_url+'/log/tambah', args, function (data, response) {
+                  if(data.success == true){
+                    console.log('Log berhasil ditambahkan')
+                    return res.json({success: true, data: {message:'Kegiatan anda berhasil dihapus.'}})
+                  }else{
+                    console.log('Log gagal ditambahkan')
+                    return res.json({success: false, data: {message:'Kegiatan anda gagal dihapus.'}})
+                  }
+                })
+
+                callback(null, 2);
+              }
+          }, function(err, results) {
+              // results is now equal to: {one: 1, two: 2}
+          })
+
+
+
+      }else{//session tidak berlaku
         return res.json({success: false, data: {message:data.data.message}})
       }
     });
@@ -271,6 +364,10 @@ exports.daftar_per_pengguna = function(req,res) {
 
       if(data.success == true){//session berlaku
         Kegiatan.find({pengguna:req.body.pengguna})
+         .sort([['created_at', 'descending']])
+         .populate({
+           path: 'kategori',model:KategoriKegiatan
+         })
          .exec(function (err, results) {
            return res.json({success: true, data: results})
          })
@@ -298,5 +395,24 @@ exports.log_kegiatan = function(req,res) {
 
   }
 
+
+}
+
+exports.daftar_per_pengguna_porto = function(req,res) {
+   if(req.body.pengguna == '' || req.body.pengguna == null ){
+    return res.json({success: false, data: {message:'Username tidak boleh kosong'}})
+  }else{
+
+      Kegiatan.find({pengguna:req.body.pengguna})
+         .exec(function (err, results) {
+          var data = results;
+           if(err){
+            return res.json({success: false, data: err})
+            }else{
+            return res.json({success: true, data: results})
+      }
+    });
+
+  }
 
 }

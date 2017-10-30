@@ -6,7 +6,7 @@ var async = require('async');
 var moment = require('moment');
 var restClient = require('node-rest-client').Client;
 var rClient = new restClient();
-
+var ket ;
 var base_api_general_url = 'http://apigeneral.vidyanusa.id'
 
 exports.tambah = function(req,res) {
@@ -15,7 +15,7 @@ exports.tambah = function(req,res) {
   req.checkBody('pengguna', 'Id Pengguna diperlukan').notEmpty();
   req.checkBody('access_token', 'Akses token tidak boleh kosong').notEmpty();
   req.checkBody('kelas', 'Id kelas diperlukan').notEmpty();
-  req.checkBody('keterangan', 'Keteragan diperlukan').notEmpty();
+  req.checkBody('totaldetik', 'Total Detik diperlukan').notEmpty();
   req.checkBody('latitude', 'Latitude diperlukan').notEmpty();
   req.checkBody('longitude', 'Longitude diperlukan').notEmpty();
 
@@ -25,9 +25,9 @@ exports.tambah = function(req,res) {
   req.sanitize('access_token').escape();
   req.sanitize('access_token').trim();
   req.sanitize('kelas').escape();
-  req.sanitize('kelas').trim();  
-  req.sanitize('keterangan').escape();
-  req.sanitize('keterangan').trim();
+  req.sanitize('kelas').trim();
+  req.sanitize('totaldetik').escape();
+  req.sanitize('totaldetik').trim();
   req.sanitize('latitude').escape();
   req.sanitize('latitude').trim();
   req.sanitize('longitude').escape();
@@ -51,13 +51,19 @@ exports.tambah = function(req,res) {
 
     rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
       if(data.success == true){//session berlaku
+        if(req.body.totaldetik >= 0 && req.body.totaldetik <= 26100){
+          ket = 'tepat waktu'
+
+        }else{
+          ket = 'terlambat'
+        }
 
         var inputan = new Absensi(
           {
             pengguna: req.body.pengguna,
             kelas: req.body.kelas,
             tanggal: req.body.tanggal,
-            keterangan: req.body.keterangan,
+            keterangan: ket,
             lokasi: {latitude: req.body.latitude, longitude:req.body.longitude}
           }
         );
