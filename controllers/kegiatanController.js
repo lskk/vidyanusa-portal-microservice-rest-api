@@ -4,12 +4,14 @@ var Log = require('../models/logModel');
 var KategoriKegiatan = require('../models/kategoriKegiatanModel');
 var Pengguna = require('../models/penggunaModel');
 
-
 //Import library
 var async = require('async');
 var moment = require('moment');
 var restClient = require('node-rest-client').Client;
 var rClient = new restClient();
+
+
+var mongoose = require('mongoose');
 
 var base_api_general_url = 'http://apigeneral.vidyanusa.id'
 
@@ -143,6 +145,338 @@ exports.tambah_kegiatan = function(req,res) {
       }
     });
 
+
+  }
+
+}
+
+exports.komentar_tambah = function(req,res) {
+
+  //Inisial validasi
+  req.checkBody('access_token', 'Akses token tidak boleh kosong').notEmpty();
+  req.checkBody('pengguna', 'Mohon isi id pengguna').notEmpty();
+  req.checkBody('kegiatan', 'Mohon isi id kegiatan').notEmpty();
+  req.checkBody('komentar', 'Mohon isi id komentar').notEmpty();
+
+  //Dibersihkan dari Special Character
+  req.sanitize('access_token').escape();
+  req.sanitize('access_token').trim();
+
+  req.sanitize('pengguna').escape();
+  req.sanitize('pengguna').trim();
+
+  req.sanitize('kegiatan').escape();
+  req.sanitize('kegiatan').trim();
+
+  req.sanitize('komentar').escape();
+  req.sanitize('komentar').trim();
+
+  var errors = req.validationErrors();
+
+  if(errors){//Terjadinya kesalahan
+      return res.json({success: false, data: errors})
+  }else{
+
+    args = {
+            data: {
+              access_token: req.body.access_token},
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+           };
+
+    rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
+      if(data.success == true){//session berlaku
+
+        console.log('id kegiatan:'+req.body.kegiatan)
+        //Mengatur proses
+        async.series({
+              one: function(callback) {
+                //Menambahkan komentar kegiatan
+                Kegiatan.update({ _id: req.body.kegiatan },
+                    { $push:
+                                    {
+                                        komentar:{
+                                        pengguna: req.body.pengguna,
+                                        komentar: req.body.komentar
+                                      }
+                                    }
+                    }
+                ).exec(function (err, results) {
+                  if(err){
+                    console.log('Gagal menambahkan komentar karena: '+err)
+                   //return res.json({success: false, data: {message:err}})
+                 }else{
+                   console.log('Berhasil menambahkan komentar')
+                   //return res.json({success: true, data: {message:'Berhasil menambahkan komentar.'}})
+                 }
+                })
+
+                callback(null, 1);
+              },
+              two: function(callback){
+
+                //Menambahkan log
+                args = {
+                        data: {
+                          access_token: req.body.access_token,
+                          id_pengguna: req.body.pengguna,
+                          tipe: 4,
+                          judul: 'Mengomentari sebuah kegiatan'
+                        },
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                       };
+
+                rClient.post(base_api_general_url+'/log/tambah', args, function (data, response) {
+                  if(data.success == true){
+                    console.log('Log berhasil ditambahkan')
+                    return res.json({success: true, data: {message:'Komentar anda berhasil ditambahkan pada kegiatan.'}})
+                  }else{
+                    console.log('Log gagal ditambahkan')
+                    return res.json({success: false, data: {message:'Komentar anda gagal ditambahkan pada kegiatan.'}})
+                  }
+                })
+
+                callback(null, 2);
+              }
+          }, function(err, results) {
+              // results is now equal to: {one: 1, two: 2}
+          })
+
+      }else{//session tidak berlaku
+        return res.json({success: false, data: {message:data.data.message}})
+      }
+    });
+
+  }
+
+}
+
+exports.komentar_daftar = function(req,res) {
+
+  //Inisial validasi
+  req.checkBody('access_token', 'Akses token tidak boleh kosong').notEmpty();
+  req.checkBody('kegiatan', 'Mohon isi id kegiatan').notEmpty();
+
+  //Dibersihkan dari Special Character
+  req.sanitize('access_token').escape();
+  req.sanitize('access_token').trim();
+
+  req.sanitize('kegiatan').escape();
+  req.sanitize('kegiatan').trim();
+
+  var errors = req.validationErrors();
+
+  if(errors){//Terjadinya kesalahan
+      return res.json({success: false, data: errors})
+  }else{
+
+    args = {
+            data: {
+              access_token: req.body.access_token},
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+           };
+
+    rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
+      if(data.success == true){//session berlaku
+
+        console.log('id kegiatan:'+req.body.kegiatan)
+
+        Kegiatan.find({_id:req.body.kegiatan})
+           .select('komentar')
+           .exec(function (err, results) {
+             if(err){
+                return res.json({success: false, data: {message:"Gagal mendapatkan daftar komentar karena: "+err}})
+             }else{
+                return res.json({success: true, data: results})
+             }
+           })
+
+      }else{//session tidak berlaku
+        return res.json({success: false, data: {message:data.data.message}})
+      }
+    });
+
+  }
+
+}
+
+exports.suka = function(req,res) {
+
+  //Inisial validasi
+  req.checkBody('access_token', 'Akses token tidak boleh kosong').notEmpty();
+  req.checkBody('pengguna', 'Mohon isi id pengguna').notEmpty();
+  req.checkBody('kegiatan', 'Mohon isi id kegiatan').notEmpty();
+
+
+  //Dibersihkan dari Special Character
+  req.sanitize('access_token').escape();
+  req.sanitize('access_token').trim();
+
+  req.sanitize('pengguna').escape();
+  req.sanitize('pengguna').trim();
+
+  req.sanitize('kegiatan').escape();
+  req.sanitize('kegiatan').trim();
+
+  var errors = req.validationErrors();
+
+  if(errors){//Terjadinya kesalahan
+      return res.json({success: false, data: errors})
+  }else{
+
+    args = {
+            data: {
+              access_token: req.body.access_token},
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+           };
+
+    rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
+      if(data.success == true){//session berlaku
+
+        //console.log('id kegiatan:'+req.body.kegiatan)
+        //Mengatur proses
+        var statusSukaKegiatan
+
+        async.series({
+              one: function(callback) {
+                //Mencek terlebih dahulu apakah pengguna sudah menlike postingan kalau sdh meremove like kl blm menambahkan like
+
+                Kegiatan.find({_id:req.body.kegiatan, suka:{$elemMatch:{pengguna:req.body.pengguna}}})
+                   .exec(function (err, results) {
+
+                     var count = results.length
+                      if(count > 0){//Lakukan remove document index array
+                        console.log('Kegiatan: '+req.body.kegiatan)
+                        Kegiatan.update( {_id: req.body.kegiatan},{ $pull: {suka: {pengguna: req.body.pengguna}}},{ safe: true, multi:true })
+                          .exec(function (err, results) {
+                            if(err){
+                              console.log('Gagal mentidak sukai kegiatan karena')
+                              return res.json({success: false, data: {message:'Gagal mentidak sukai kegiatan karena:  '+err}})
+                            }
+                            //return res.json({success: true, data: {message:'Berhasil mentidaksukai kegiatan.'}})
+                            console.log('Berhasil mentidak sukai kegiatan')
+                            statusSukaKegiatan = "Berhasil mentidaksukai kegiatan."
+                          })
+
+                        //return res.json({success: true, data: {message:'B menambahkan guru ke mata pelajaran karena sudah terdaftar di kelas.'}})
+                      }else if(count == 0){//Lakukan add index array
+
+                        Kegiatan.update({ _id: req.body.kegiatan },
+                            { $push:
+                                            {
+                                                suka:{
+                                                pengguna: req.body.pengguna
+                                              }
+                                            }
+                            }
+                        ).exec(function (err, results) {
+                          if(err){
+                            console.log('Gagal menyukai kegiatan karena: '+err)
+                           //return res.json({success: false, data: {message:err}})
+                         }else{
+                           statusSukaKegiatan = "Berhasil menyukai kegiatan."
+                           console.log('Berhasil menyukai kegiatan')
+                           //return res.json({success: true, data: {message:'Berhasil menambahkan komentar.'}})
+                         }
+                        })
+
+                      }
+
+                    });
+
+                callback(null, 1);
+              },
+              two: function(callback){
+
+                //Menambahkan log
+                args = {
+                        data: {
+                          access_token: req.body.access_token,
+                          id_pengguna: req.body.pengguna,
+                          tipe: 4,
+                          judul: statusSukaKegiatan
+                        },
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                       };
+
+                rClient.post(base_api_general_url+'/log/tambah', args, function (data, response) {
+                  if(data.success == true){
+                    console.log('Log berhasil ditambahkan')
+                    return res.json({success: true, data: {message:statusSukaKegiatan}})
+                  }else{
+                    console.log('Log gagal ditambahkan')
+                    return res.json({success: false, data: {message:statusSukaKegiatan}})
+                  }
+                })
+
+                callback(null, 2);
+              }
+          }, function(err, results) {
+              // results is now equal to: {one: 1, two: 2}
+          })
+
+      }else{//session tidak berlaku
+        return res.json({success: false, data: {message:data.data.message}})
+      }
+    });
+
+  }
+
+}
+
+exports.suka_daftar = function(req,res) {
+
+  //Inisial validasi
+  req.checkBody('access_token', 'Akses token tidak boleh kosong').notEmpty();
+  req.checkBody('kegiatan', 'Mohon isi id kegiatan').notEmpty();
+
+  //Dibersihkan dari Special Character
+  req.sanitize('access_token').escape();
+  req.sanitize('access_token').trim();
+
+  req.sanitize('kegiatan').escape();
+  req.sanitize('kegiatan').trim();
+
+  var errors = req.validationErrors();
+
+  if(errors){//Terjadinya kesalahan
+      return res.json({success: false, data: errors})
+  }else{
+
+    args = {
+            data: {
+              access_token: req.body.access_token},
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+           };
+
+    rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
+      if(data.success == true){//session berlaku
+
+        /*Kegiatan.find({_id:req.body.kegiatan})
+           .select('suka')
+           .exec(function (err, results) {
+             if(err){
+                return res.json({success: false, data: {message:"Gagal mendapatkan daftar suka karena: "+err}})
+             }else{
+               var count = results.length
+                return res.json({success: true, data: count})
+             }
+           })
+       */
+       Kegiatan.find({_id: req.body.kegiatan})
+        .select('suka')
+        .exec(function (err, results) {
+          if(err){
+             return res.json({success: false, data: {message:"Gagal mendapatkan daftar suka karena: "+err}})
+          }else{
+             var response = {data: results}
+             return res.json({success: true, data: response.data[0].suka.length})
+          }
+        })
+
+      }else{//session tidak berlaku
+        return res.json({success: false, data: {message:data.data.message}})
+      }
+    });
 
   }
 
@@ -318,6 +652,9 @@ exports.daftar_semua = function(req,res) {
          .populate({
            path: 'kategori',model:KategoriKegiatan
          })
+         .populate({
+           path: 'komentar.pengguna',model:Pengguna
+         })
          .exec(function (err, results) {
            return res.json({success: true, data: results})
          })
@@ -363,6 +700,7 @@ exports.daftar_per_pengguna = function(req,res) {
     rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
 
       if(data.success == true){//session berlaku
+
         Kegiatan.find({pengguna:req.body.pengguna})
          .sort([['created_at', 'descending']])
          .populate({
@@ -371,6 +709,7 @@ exports.daftar_per_pengguna = function(req,res) {
          .exec(function (err, results) {
            return res.json({success: true, data: results})
          })
+
       }else{
          return res.json({success: false, data: {message:data.data.message}})
       }

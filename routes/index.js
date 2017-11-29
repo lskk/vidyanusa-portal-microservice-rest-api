@@ -22,6 +22,10 @@ router.group("/kegiatan", (router) => {
     router.post("/daftar_per_pengguna", kegiatanController.daftar_per_pengguna);
     //router.post("/log", kegiatanController.log_kegiatan);
     router.post("/daftar_per_pengguna_porto", kegiatanController.daftar_per_pengguna_porto);
+    router.post("/komentar/tambah", kegiatanController.komentar_tambah);
+    router.post("/komentar/daftar", kegiatanController.komentar_daftar);
+    router.post("/suka", kegiatanController.suka);
+    router.post("/suka/daftar", kegiatanController.suka_daftar);
 });
 
 module.exports = router;

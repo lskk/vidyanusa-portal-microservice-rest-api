@@ -6,6 +6,8 @@ var async = require('async');
 var moment = require('moment');
 var restClient = require('node-rest-client').Client;
 var rClient = new restClient();
+
+
 var ket ;
 var base_api_general_url = 'http://apigeneral.vidyanusa.id'
 
