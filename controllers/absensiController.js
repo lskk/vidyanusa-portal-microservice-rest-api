@@ -1,15 +1,25 @@
 //Import model
 var Absensi = require('../models/absensiModel');
 
+//Import Function
+const FSession = require('../functions/Session');
+const FAbsen = require('../functions/Absensi');
+
 //Import library
 var async = require('async');
 var moment = require('moment');
 var restClient = require('node-rest-client').Client;
 var rClient = new restClient();
+// var rClient = new restClient({
+//  proxy:{
+//            host:"",
+//            port: ,
+//            user:"",
+//            password:""
+//        }
+// });
 
-
-var ket ;
-var base_api_general_url = 'http://apigeneral.vidyanusa.id'
+const Global = require('../global.json');
 
 exports.tambah = function(req,res) {
 
@@ -39,53 +49,54 @@ exports.tambah = function(req,res) {
   var errors = req.validationErrors();
 
   if(errors){//Terjadinya kesalahan
-
       return res.json({success: false, data: errors})
-
   }else{
-
-    //Cek akses token terlebih dahulu
-    args = {
-          	data: {
-              access_token: req.body.access_token},
-          	headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-           };
-
-    rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
-      if(data.success == true){//session berlaku
-        if(req.body.totaldetik >= 0 && req.body.totaldetik <= 26100){
-          ket = 'tepat waktu'
-
+    //Promise session -> tambah absen
+    //Promise Cek Session
+    const promiseSession =  new Promise(function (resolve, reject) {
+      FSession.cek(req.body, function(callback) {
+        if(callback.success == true){
+            resolve(true)
         }else{
-          ket = 'terlambat'
+            reject(Global.session.fail)
         }
-
-        var inputan = new Absensi(
-          {
-            pengguna: req.body.pengguna,
-            kelas: req.body.kelas,
-            tanggal: req.body.tanggal,
-            keterangan: ket,
-            lokasi: {latitude: req.body.latitude, longitude:req.body.longitude}
-          }
-        );
-
-        inputan.save(function(err){
-          if (err) {
-            return res.json({success: false, data: err})
-          } else {
-            return res.json({success: true, data: {message:'Absensi anda berhasil direkam.'}})
-          }
-        })
-
-      }else{//sessio tidak berlaku
-        return res.json({success: false, data: {message:data.data.message}})
-      }
+      });
     });
 
+    //Promise Tambah Absen
+    const promiseTambahAbsen =  function(session){
+      return new Promise(function (resolve, reject) {
+        if(session){
+          FAbsen.tambahAbsen(req.body, function(callback) {
+            if(callback){
+                resolve(Global.tambah_absen.success);
+            }else{
+              reject(Global.tambah_absen.fail);
+            }
+          });
+        }else{
+          reject(Global.tambah_absen.fail)
+        }
+      })
+    };
 
+
+    //Atur promise
+    const consumePromise = function(){
+      promiseSession
+        .then(promiseTambahAbsen)
+        .then(function (data) {
+          return res.json({success: true, data: {message:data}})
+        })
+        .catch(function(error) {
+          return res.json({success: false, data: {message:error}})
+        })
+    };
+
+
+    //Eksekusi promise
+    consumePromise();
   }
-
 }
 
 exports.daftar_per_pengguna = function(req,res) {
@@ -106,29 +117,55 @@ exports.daftar_per_pengguna = function(req,res) {
     return res.json({success: false, data: {message: errors }})
 
   }else{
+    //Promise session -> Daftar absensi per pengguna
+    //Promise Cek Session
+    const promiseSession =  new Promise(function (resolve, reject) {
+      FSession.cek(req.body, function(callback) {
+        if(callback.success == true){
+            resolve(true)
+        }else{
+            reject(Global.session.fail)
+        }
+      });
+    });
 
-    //Cek akses token terlebih dahulu
-    args = {
-          	data: {
-              access_token: req.body.access_token},
-          	headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-           };
+    //Promise Absen Per Pengguna
+    var absenPerPengguna
+    const promiseAbsenPerPengguna =  function(session){
+      return new Promise(function (resolve, reject) {
+        if(session){
+          FAbsen.absensiPerPengguna(req.body, function(callback) {
+            if(arguments[0]){
+                absenPerPengguna = arguments[1]
+                resolve(true);
+            }else{
+              reject(Global.absen_pengguna.fail);
+            }
+          });
+        }else{
+          reject(Global.absen_pengguna.fail)
+        }
+      })
+    };
 
-    rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
 
-      if(data.success == true){//session berlaku
-        Absensi.find({pengguna:req.body.pengguna})
-         .exec(function (err, results) {
-           return res.json({success: true, data: results})
-         })
-      }else{
-         return res.json({success: false, data: {message:data.data.message}})
-      }
+    //Atur promise
+    const consumePromise = function(){
+      promiseSession
+        .then(promiseAbsenPerPengguna)
+        .then(function () {
+          return res.json({success: true, data: absenPerPengguna})
+        })
+        .catch(function(error) {
+          return res.json({success: false, data: {message:error}})
+        })
+    };
 
-    })
+
+    //Eksekusi promise
+    consumePromise();
 
   }
-
 }
 
 exports.daftar_per_kelas = function(req,res) {
@@ -149,27 +186,50 @@ exports.daftar_per_kelas = function(req,res) {
     return res.json({success: false, data: {message: errors }})
 
   }else{
+    //Promise Pengguna -> Absen per kelas
+    //Promise Cek Session
+    const promiseSession =  new Promise(function (resolve, reject) {
+      FSession.cek(req.body, function(callback) {
+        if(callback.success == true){
+            resolve(true)
+        }else{
+            reject(Global.session.fail)
+        }
+      });
+    });
 
-    //Cek akses token terlebih dahulu
-    args = {
-          	data: {
-              access_token: req.body.access_token},
-          	headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-           };
+    //Promise Absen Per Kelas
+    var absenPerKelas
+    const promiseAbsenPerPengguna =  function(session){
+      return new Promise(function (resolve, reject) {
+        if(session){
+          FAbsen.absensiPerKelas(req.body, function(callback) {
+            if(arguments[0]){
+                absenPerKelas = arguments[1]
+                resolve(true);
+            }else{
+              reject(Global.absen_perkelas.fail);
+            }
+          });
+        }else{
+          reject(Global.absen_perkelas.fail)
+        }
+      })
+    };
 
-    rClient.post(base_api_general_url+'/cek_session', args, function (data, response) {
+    //Atur promise
+    const consumePromise = function(){
+      promiseSession
+        .then(promiseAbsenPerPengguna)
+        .then(function () {
+          return res.json({success: true, data: absenPerKelas})
+        })
+        .catch(function(error) {
+          return res.json({success: false, data: {message:error}})
+        })
+    };
 
-      if(data.success == true){//session berlaku
-        Absensi.find({kelas:req.body.kelas})
-         .exec(function (err, results) {
-           return res.json({success: true, data: results})
-         })
-      }else{
-         return res.json({success: false, data: {message:data.data.message}})
-      }
-
-    })
-
+    //Eksekusi promise
+    consumePromise();
   }
-
 }

@@ -1,0 +1,78 @@
+{
+  "api_global" : "http://apigeneral.vidyanusa.id",
+  "api_portal" : "http://api.vidyanusa.id",
+  "devel_api_global" : "http://localhost:3001",
+  "devel_api_portal" : "http://localhost:3002",
+  "session": {
+    "success" : "Session berlaku.",
+    "fail" : "Session tidak berlaku"
+  },
+  "tambah_kegiatan": {
+    "success" : "Berhasil menambahkan kegiatan",
+    "fail" : "Gagal menambahkan kegiatan"
+  },
+  "tambah_poin": {
+    "success" : "Berhasil menambahkan poin",
+    "fail" : "Gagal menambahkan poin"
+  },
+  "tambah_log": {
+    "success" : "Berhasil menambahkan log",
+    "fail" : "Gagal menambahkan log"
+  },
+  "tambah_komentar": {
+    "success" : "Berhasil menambahkan komentar",
+    "fail" : "Gagal menambahkan komentar"
+  },
+  "daftar_komentar": {
+    "success" : "Berhasil menampilkan daftar komentar",
+    "fail" : "Gagal menampilkan data komentar"
+  },
+  "suka_kegiatan": {
+    "success" : "Berhasil menyukai kegiatan",
+    "fail" : "Gagal menyukai kegiatan"
+  },
+  "tidak_suka_kegiatan": {
+    "success" : "Berhasil mentidak sukai kegiatan",
+    "fail" : "Gagal mentidak sukai kegiatan"
+  },
+  "status_suka_kegiatan": {
+    "success" : "Berhasil mengembalikan status suka kegiatan",
+    "fail" : "Gagal mengembalikan status suka kegiatan"
+  },
+  "penyuka_kegiatan": {
+    "success" : "Berhasil mengembalikan penyuka status kegiatan.",
+    "fail" : "Gagal mengembalikan penyuka status kegiatan"
+  },
+  "hapus_kegiatan": {
+    "success" : "Berhasil menghapus kegiatan.",
+    "fail" : "Gagal menghapus kegiatan"
+  },
+  "kategori_kegiatan": {
+    "success" : "Berhasil mengembalikan kategori kegiatan.",
+    "fail" : "Gagal mengembalikan kategori kegiatan"
+  },
+  "semua_kegiatan": {
+    "success" : "Berhasil mengembalikan semua kegiatan.",
+    "fail" : "Gagal mengembalikan semua kegiatan"
+  },
+  "penguna_kegiatan": {
+    "success" : "Berhasil mengembalikan kegiatan Anda.",
+    "fail" : "Gagal mengembalikan kegiatan Anda."
+  },
+  "penguna_porto": {
+    "success" : "Berhasil mengembalikan portofolio kegiatan Anda.",
+    "fail" : "Gagal mengembalikan portofolio kegiatan Anda."
+  },
+  "tambah_absen": {
+    "success" : "Berhasil menambahkan absen.",
+    "fail" : "Gagal menambahkan absen."
+  },
+  "absen_pengguna": {
+    "success" : "Berhasil mengembalikan absen per pengguna.",
+    "fail" : "Gagal mengembalikan absen per pengguna."
+  },
+  "absen_perkelas": {
+    "success" : "Berhasil mengembalikan absen per kelas.",
+    "fail" : "Gagal mengembalikan absen per kelas."
+  }
+}
