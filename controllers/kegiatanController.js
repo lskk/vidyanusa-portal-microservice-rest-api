@@ -17,15 +17,16 @@ const restClient = require('node-rest-client').Client;
 const rClient = new restClient();
 // var rClient = new restClient({
 //  proxy:{
-//            host:"",
-//            port: ,
-//            user:"",
-//            password:""
+//      host:Global.proxy_host,
+//       port: Global.proxy_port,
+//       user:Global.proxy_user,
+//       password:Global.proxy_password
 //        }
 // });
 const mongoose = require('mongoose');
 
 const Global = require('../global.json');
+
 
 exports.tambah_kegiatan = function(req,res) {
   //Inisial validasi
